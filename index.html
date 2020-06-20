@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>New Tab</title>
+    <style>
+      body {
+        margin: 0;
+        background-color: #292d3e;
+        color: white;
+      }
+
+      * {
+        font-family: Arial, Helvetica, sans-serif;
+      }
+
+      code {
+        font-family: monospace;
+      }
+
+      body,
+      html {
+        height: 100%;
+      }
+
+      a {
+        color: white;
+        height: max-content;
+      }
+
+      main {
+        padding: 3rem;
+        gap: 2rem;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+        flex-direction: column;
+      }
+
+      main > div:first-of-type {
+        display: grid;
+        gap: 1rem;
+        grid-template-rows: max-content;
+      }
+
+      #links {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 3rem;
+      }
+
+      figure {
+        display: flex;
+        align-items: center;
+        flex-direction: column;
+        margin: 0;
+      }
+
+      figcaption {
+        margin: 20px 0;
+        text-align: center;
+      }
+
+      img {
+        width: 100px;
+        filter: invert(1);
+      }
+
+      input {
+        border: 1px solid white;
+        padding: 1rem;
+      }
+
+      button,
+      input {
+        background-color: transparent;
+        color: white;
+      }
+      button {
+        font-weight: bold;
+        border: none;
+        cursor: pointer;
+      }
+
+      li {
+        line-height: 1.25;
+      }
+
+      ul {
+        padding-left: 1rem;
+      }
+
+      form {
+        display: grid;
+        grid-template-columns: 60% 3rem;
+        gap: 1rem;
+      }
+
+      button[type='submit'] {
+        font-size: 1.5rem;
+      }
+
+      #ip {
+        position: absolute;
+        bottom: 2rem;
+        right: 0;
+        left: 2rem;
+        right: 2rem;
+        width: calc(100% - 2 * 2rem);
+        display: flex;
+        justify-content: space-between;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div>
+        <div>
+          <div id="date"></div>
+          <h2>search</h2>
+        </div>
+        <form method="POST" action="https://duckduckgo.com">
+          <input name="q" placeholder="Search" />
+          <button type="submit">🔍</button>
+        </form>
+        <div>
+          <h2>todo</h2>
+          <div id="todo"></div>
+        </div>
+      </div>
+      <div id="links"></div>
+    </main>
+    <div id="ip"></div>
+    <script type="module">
+      import { render, html, useState, useEffect } from 'https://unpkg.com/htm/preact/standalone.module.js'
+      // links
+
+      const links = [
+        {
+          href: 'http://localhost:3000',
+          title: 'local',
+          icon: 'home'
+        },
+        {
+          href: 'https://gmail.com',
+          title: 'spam',
+          icon: 'gmail'
+        },
+        {
+          href: 'https://figma.com',
+          title: '5 years wasted',
+          icon: 'figma'
+        },
+        {
+          href: 'https://github.com',
+          title: 'shitcode',
+          icon: 'github'
+        },
+        {
+          href: 'https://www.deepl.com/translator',
+          title: 'misunderstood',
+          icon: 'translate'
+        },
+        {
+          href: 'https://twitter.com',
+          title: 'cancelled',
+          icon: 'twitter'
+        },
+        {
+          href: 'https://invidio.us',
+          title: 'consoom video',
+          icon: 'youtube'
+        },
+        {
+          href: 'https://my.vultr.com',
+          title: 'vps',
+          icon: 'vultr'
+        }
+      ]
+
+      render(
+        html`${links.map(link => {
+          return html`
+            <a href=${link.href}>
+              <figure>
+                ${link.icon && html`<img src="public/${link.icon}.svg" />`}
+                <figcaption>${link.title}</figcaption>
+              </figure>
+            </a>
+          `
+        })}`,
+        document.getElementById('links')
+      )
+
+      // date
+
+      const date = new Date()
+
+      render(html` <h1>${date.toDateString()}</h1>`, document.getElementById('date'))
+
+      // todo
+
+      const Todo = () => {
+        const [todo, setTodo] = useState(JSON.parse(localStorage.getItem('todo')) || [])
+
+        useEffect(() => {
+          localStorage.setItem('todo', JSON.stringify(todo))
+        }, [todo])
+
+        return html`<ul>
+            ${todo.map(
+              task =>
+                html` <li>${task} <button onclick=${() => setTodo(todo.filter(item => item !== task))}>x</button></li> `
+            )}
+          </ul>
+          <input
+            style="width: 50%;"
+            onkeydown=${el => {
+              el.key === 'Enter' && setTodo([...todo, el.currentTarget.value])
+            }}
+            placeholder="One more useless thing you need to do..."
+          /> `
+      }
+
+      render(html`<${Todo} />`, document.getElementById('todo'))
+
+      const Powerline = () => {
+        const [IP, setIP] = useState('')
+
+        const [WebGL, setWebGL] = useState(false)
+
+        useEffect(() => {
+          const cvs = document.createElement('canvas')
+
+          if (WebGLRenderingContext || cvs.getContext('webgl')) {
+            setWebGL(true)
+          }
+
+          fetch(`https://api.ipify.org/?format=json`)
+            .then(res => res.json())
+            .then(({ ip }) => setIP(ip))
+            .catch(e => console.log(e))
+        }, [])
+
+        return html`
+          <div><strong>WebGL supported:</strong> <code>${WebGL ? 'Yes' : 'No'}</code></div>
+          <div><strong>IP</strong>: <code>${IP}</code></div>
+        `
+      }
+
+      render(html`<${Powerline} />`, document.getElementById('ip'))
+    </script>
+  </body>
+</html>
